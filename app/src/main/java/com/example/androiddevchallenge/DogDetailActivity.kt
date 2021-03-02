@@ -15,14 +15,26 @@
  */
 package com.example.androiddevchallenge
 
+import android.R
+import android.app.Activity
+import android.app.ActivityOptions
 import android.content.Context
+import android.content.Intent
+import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
+import android.transition.Explode
+import android.transition.Fade
+import android.transition.TransitionInflater
+import android.view.Window
+import android.widget.Toast
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.Card
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
@@ -34,79 +46,81 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.core.app.ActivityCompat
 import com.example.androiddevchallenge.data.Dog
 import com.example.androiddevchallenge.data.DogDataStore
 import com.example.androiddevchallenge.ui.theme.MyTheme
 import dev.chrisbanes.accompanist.glide.GlideImage
-import android.R
-import android.app.Activity
-import android.graphics.drawable.ColorDrawable
-import android.transition.Explode
-import android.transition.Fade
-import android.transition.TransitionInflater
-import android.view.Window
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Card
-import androidx.compose.ui.graphics.Color
 
+class DogDetailActivity : AppCompatActivity() {
 
-class MainActivity : AppCompatActivity() {
+    companion object {
+        const val DOG_TAG = "dog"
+
+        fun startDogDetail(context: Activity, dog: Dog) {
+            val intent = Intent(context, DogDetailActivity::class.java)
+            intent.putExtra(DOG_TAG, dog)
+            context.startActivity(intent, ActivityOptions.makeSceneTransitionAnimation(context).toBundle())
+        }
+    }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         window.exitTransition = Fade().setDuration(800)
         window.enterTransition = Explode().setDuration(800)
         window.setBackgroundDrawable(ColorDrawable(0xFFf2f2f2.toInt()))
+
+        val dog: Dog? = intent.getSerializableExtra(DOG_TAG) as Dog?
+        if (dog == null) {
+            Toast.makeText(this, "No information to show.", Toast.LENGTH_SHORT).show()
+            return
+        }
+
         setContent {
-            DogMainList(this, DogDataStore.dog)
+            DetailPage(this, dog)
         }
     }
 }
 
-
+@Preview
 @Composable
-fun DogMainList(context: Activity, data: List<Dog>) {
-    // We save the scrolling position with this state
+fun DetailPage(context: Context, data: Dog) {
     val scrollState = rememberLazyListState()
 
     LazyColumn(state = scrollState) {
-
-        items(data.size) {
-            val dog = data[it]
-            Card(
-                shape = RoundedCornerShape(8.dp),
-                modifier = Modifier.fillMaxWidth().padding(4.dp)
-            ) {
-                Row(
-                    Modifier
-                        .clickable {
-                            DogDetailActivity.startDogDetail(context, dog)
-                        }
-                        .width(1000.dp)) {
-                    Column(modifier = Modifier.padding(10.dp)) {
-                        Row {
-                            GlideImage(
-                                data = dog.image,
-                                contentDescription = "",
-                                modifier = Modifier.size(80.dp),
-                                contentScale = ContentScale.Crop
-                            )
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier
-                                    .height(80.dp)
-                                    .padding(start = 10.dp)
-                            ) {
+        item {
+            Row {
+                Column {
+                    GlideImage(
+                        data = data.image,
+                        contentDescription = "",
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(300.dp),
+                        contentScale = ContentScale.Crop
+                    )
+                    Card(
+                        shape = RoundedCornerShape(8.dp),
+                        modifier = Modifier.fillMaxWidth().padding(4.dp)
+                    ) {
+                        Column {
+                            Row(Modifier.padding(20.dp)) {
                                 Text(
-                                    text = dog.name,
-                                    overflow = TextOverflow.Ellipsis,
+                                    text = data.name,
                                     fontWeight = FontWeight.Bold,
+                                    fontSize = 24.sp
+                                )
+                            }
+                            Row(Modifier.padding(start = 20.dp, end = 20.dp, bottom = 20.dp)) {
+                                Text(
+                                    text = data.desc,
+                                    fontSize = 16.sp
                                 )
                             }
                         }
                     }
                 }
-
             }
         }
     }
