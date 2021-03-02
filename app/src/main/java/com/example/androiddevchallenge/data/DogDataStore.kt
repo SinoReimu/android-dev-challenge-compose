@@ -31,7 +31,6 @@ object DogDataStore {
         val typeToken: TypeToken<List<Dog>> = object : TypeToken<List<Dog>>() {}
         dog = Gson().fromJson(content, typeToken.type)
     }
-
 }
 
 data class Dog constructor(var image: String, var name: String, var desc: String) : Serializable
